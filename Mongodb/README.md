@@ -115,3 +115,153 @@
     // user name: dbuser1
     // password: 5weyKSiHPn34tBq2
    ```
+# Front-end Part For `ReactApp`
+
+## `Home Componenet`
+
+   ```js
+    import React, { useEffect, useState } from 'react';
+    import { Link } from 'react-router-dom';
+
+    const Home = () => {
+        const [users, setUsers] = useState([]);
+        useEffect(() => {
+            fetch('http://localhost:5000/user')
+                .then(res => res.json())
+                .then(data => setUsers(data));
+        }, []);
+        const handleDelete = id => {
+            const proceed = window.confirm("Are you Sure You want to delete?");
+            if (proceed)
+            {
+                const url = `http://localhost:5000/user/${id}`;
+                fetch(url, {
+                    method:'DELETE'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.deletedCount>0)
+                    {
+                        console.log('something');
+                        // setChange(!change)
+                        const remaining = users.filter(user => user._id !== id);
+                        setUsers(remaining);
+                    }
+                })
+            }
+        }
+        return (
+            <div>
+                <h1>Available User {users.length}</h1>
+                <ul>
+                    {
+                        users.map((user) => <li
+                            key={user._id}>{user.name} :: {user.email}
+                            <button onClick={() => handleDelete(user._id)}>X</button>
+                            <Link to={`/user/update/${user._id}`}><button>Update</button></Link>
+                        </li>)
+                    }
+                </ul>
+            </div>
+        );
+    };
+
+    export default Home;
+  
+  ```
+## `AddUser Componenet`
+
+   ```js
+   import React, { useRef } from 'react';
+
+    const AddUser = () => {
+        const nameRef = useRef('');
+        const emailRef = useRef('')
+        const handleSubmit = (event) => {
+            event.preventDefault();
+            const name = nameRef.current.value;
+            const email = emailRef.current.value;
+            const user = { name, email };
+            fetch('http://localhost:5000/user', {
+                method:'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+
+                },
+                body:JSON.stringify(user)
+            })
+                .then(res => res.json()).then(data => {
+                    console.log(data);
+                    event.target.reset(); 
+                })
+
+        }
+        return (
+            <div>
+                <h2>Please Add User</h2>
+                <form onSubmit={handleSubmit}>
+                    <input type="text" placeholder='Name' ref={nameRef}  required />
+                    <br />
+                    <input type="email" placeholder='Email' ref={emailRef} required />
+                    <br />
+                    <input type="submit" value='Add User'/>
+                </form>
+            </div>
+        );
+    };
+
+    export default AddUser;
+    
+   ```
+# `UpdateUser Component`
+   ```js
+    import React, { useEffect, useRef, useState } from 'react';
+    import { useParams } from 'react-router-dom';
+
+    const UpdateUser = () => {
+        const { id } = useParams();
+        const [user, setUser] = useState({});
+
+        useEffect(() => {
+            const url = `http://localhost:5000/user/${id}`;
+            fetch(url)
+                .then(res => res.json())
+                .then(data => setUser(data))
+        },[])
+        const handleUpdate = (event) => {
+            event.preventDefault();
+            const name = event.target.name.value;
+            const email = event.target.email.value;
+            const user = { name, email };
+            const url = `http://localhost:5000/user/${id}`;
+            fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+
+                },
+                body: JSON.stringify(user)
+            })
+            .then(res => res.json()).then(data => {
+                console.log(data);
+                event.target.reset();
+                alert("Succecefully Updated")
+            })
+        }
+
+        return (
+            <div>
+                <h1>Update Your User:{user.name}</h1>
+                <form onSubmit={handleUpdate}>
+                    <input type="text" placeholder='Name' name='name' required />
+                    <br />
+                    <input type="email" placeholder='Email' name='email' required />
+                    <br />
+                    <input type="submit" value='Update User' />
+                </form>
+            </div>
+        );
+    };
+
+    export default UpdateUser;
+   ```
